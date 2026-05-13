@@ -37,10 +37,10 @@ genai.configure(
 
 
 # MODEL
-
+print("NEW AI_ENGINE DEPLOYED")
 model = genai.GenerativeModel(
 
-    "models/gemini-1.5-flash"
+    "gemini-1.5-flash"
 )
 
 
