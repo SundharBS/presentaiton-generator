@@ -1,30 +1,20 @@
 import re
-import os
-
 import yfinance as yf
 import google.generativeai as genai
-
-from dotenv import load_dotenv
-
-
-# LOAD ENV VARIABLES
-
-load_dotenv()
+import streamlit as st
 
 
 # GEMINI CONFIG
 
 genai.configure(
 
-    api_key=os.getenv(
-        "GEMINI_API_KEY"
-    )
+    api_key=st.secrets["GEMINI_API_KEY"]
 )
 
 
 model = genai.GenerativeModel(
 
-    "gemini-1.5-flash-latest"
+    "gemini-1.5-flash"
 )
 
 
@@ -72,7 +62,7 @@ def extract_metric(
     return None
 
 
-# YAHOO FINANCE DATA
+# YAHOO FINANCE
 
 def get_market_data(company_name):
 
@@ -109,10 +99,7 @@ def get_market_data(company_name):
 
     try:
 
-        stock = yf.Ticker(
-
-            ticker
-        )
+        stock = yf.Ticker(ticker)
 
         return stock.info
 
@@ -121,7 +108,7 @@ def get_market_data(company_name):
         return {}
 
 
-# MAIN ANALYSIS FUNCTION
+# MAIN FUNCTION
 
 def generate_company_analysis(
 
@@ -141,7 +128,7 @@ def generate_company_analysis(
     )
 
 
-    # SECTOR + INDUSTRY
+    # SECTOR
 
     sector_prompt = f"""
 
@@ -223,12 +210,10 @@ def generate_company_analysis(
     {company_name}
 
     Mention:
-    - industry growth
-    - market trends
+    - growth
+    - trends
     - opportunities
     - outlook
-
-    Use professional language.
     """
 
 
@@ -252,8 +237,6 @@ def generate_company_analysis(
     - scalability
     - positioning
     - growth opportunities
-
-    Use institutional language.
     """
 
 
@@ -263,7 +246,7 @@ def generate_company_analysis(
     )
 
 
-    # METRIC EXTRACTION
+    # EXTRACTED METRICS
 
     branch_count = extract_metric(
 

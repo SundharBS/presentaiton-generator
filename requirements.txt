@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 streamlit
 pandas
 plotly
@@ -13,4 +14,21 @@ googlesearch-python
 duckduckgo-search
 wikipedia
 yfinance
+=======
+streamlit
+pandas
+plotly
+kaleido
+python-pptx
+pdfplumber
+pytesseract
+pdf2image
+pillow
+requests
+beautifulsoup4
+googlesearch-python
+duckduckgo-search
+wikipedia
+yfinance
+>>>>>>> 7282c85c385b2a4b5aa442fe1580cf10806353da
 google-generativeai
