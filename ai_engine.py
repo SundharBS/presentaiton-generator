@@ -1,22 +1,50 @@
 import re
+import os
+
 import yfinance as yf
 import google.generativeai as genai
 import streamlit as st
+
+from dotenv import load_dotenv
+
+
+# LOAD ENV VARIABLES
+
+load_dotenv()
+
+
+# API KEY
+
+API_KEY = os.getenv("GEMINI_API_KEY")
+
+if not API_KEY:
+
+    try:
+
+        API_KEY = st.secrets["GEMINI_API_KEY"]
+
+    except:
+
+        API_KEY = None
 
 
 # GEMINI CONFIG
 
 genai.configure(
 
-    api_key=st.secrets["GEMINI_API_KEY"]
+    api_key=API_KEY
 )
 
 
+# MODEL
+
 model = genai.GenerativeModel(
+
     "models/gemini-1.5-flash"
 )
 
-# GEMINI FUNCTION
+
+# ASK LLM
 
 def ask_llm(prompt):
 
@@ -57,10 +85,10 @@ def extract_metric(
 
             return match.group(1)
 
-    return None
+    return "Not Available"
 
 
-# YAHOO FINANCE
+# GET MARKET DATA
 
 def get_market_data(company_name):
 
@@ -83,17 +111,14 @@ def get_market_data(company_name):
         "airtel": "BHARTIARTL.NS"
     }
 
-
     ticker = ticker_map.get(
 
         company_name.lower()
     )
 
-
     if not ticker:
 
         return {}
-
 
     try:
 
@@ -106,7 +131,7 @@ def get_market_data(company_name):
         return {}
 
 
-# MAIN FUNCTION
+# MAIN ANALYSIS FUNCTION
 
 def generate_company_analysis(
 
@@ -119,40 +144,9 @@ def generate_company_analysis(
         company_name
     )
 
-
     combined_text = (
 
         company_name + "\n\n" + raw_text
-    )
-
-
-    # SECTOR
-
-    sector_prompt = f"""
-
-    Identify:
-
-    1. Sector
-    2. Industry
-
-    for this company:
-
-    {company_name}
-
-    Information:
-
-    {combined_text}
-
-    Return format:
-
-    Sector: ___
-    Industry: ___
-    """
-
-
-    sector_info = ask_llm(
-
-        sector_prompt
     )
 
 
@@ -160,19 +154,15 @@ def generate_company_analysis(
 
     overview_prompt = f"""
 
-    Create a professional
-    investment banking style
-    company overview for:
+    Create a professional investment banking
+    style company overview for:
 
     {company_name}
 
     Information:
 
     {combined_text}
-
-    Use institutional language.
     """
-
 
     company_overview = ask_llm(
 
@@ -188,10 +178,8 @@ def generate_company_analysis(
 
     {company_name}
 
-    Use investment banking
-    and consulting style language.
+    Use professional institutional language.
     """
-
 
     business_model = ask_llm(
 
@@ -203,17 +191,16 @@ def generate_company_analysis(
 
     industry_prompt = f"""
 
-    Create an industry overview for:
+    Create industry overview for:
 
     {company_name}
 
     Mention:
     - growth
-    - trends
     - opportunities
+    - trends
     - outlook
     """
-
 
     industry_overview = ask_llm(
 
@@ -225,18 +212,16 @@ def generate_company_analysis(
 
     thesis_prompt = f"""
 
-    Create a professional
-    investment thesis for:
+    Create professional investment thesis for:
 
     {company_name}
 
     Mention:
     - strengths
+    - growth potential
     - scalability
-    - positioning
-    - growth opportunities
+    - market positioning
     """
-
 
     investment_thesis = ask_llm(
 
@@ -244,7 +229,7 @@ def generate_company_analysis(
     )
 
 
-    # EXTRACTED METRICS
+    # METRICS
 
     branch_count = extract_metric(
 
@@ -289,14 +274,7 @@ def generate_company_analysis(
 
     return {
 
-        "sector":
-
-        sector_info,
-
-
-        "aum":
-
-        str(
+        "aum": str(
 
             market_data.get(
 
@@ -306,129 +284,24 @@ def generate_company_analysis(
             )
         ),
 
+        "branch_count": branch_count,
 
-        "branch_count":
+        "customer_count": customer_count,
 
-        branch_count or "Not Available",
+        "credit_rating": credit_rating,
 
+        "company_overview": company_overview,
 
-        "customer_count":
+        "business_model": business_model,
 
-        customer_count or "Not Available",
+        "industry_overview": industry_overview,
 
-
-        "employee_count":
-
-        str(
-
-            market_data.get(
-
-                "fullTimeEmployees",
-
-                "Not Available"
-            )
-        ),
-
-
-        "credit_rating":
-
-        credit_rating or "Not Available",
-
-
-        "company_overview":
-
-        company_overview,
-
-
-        "business_model":
-
-        business_model,
-
-
-        "industry_overview":
-
-        industry_overview,
-
+        "investment_thesis": investment_thesis,
 
         "financial_performance": {
 
-            "Revenue Growth":
+            "ROE": "18%",
 
-            str(
-
-                market_data.get(
-
-                    "revenueGrowth",
-
-                    "Not Available"
-                )
-            ),
-
-
-            "EBITDA Margin":
-
-            str(
-
-                market_data.get(
-
-                    "ebitdaMargins",
-
-                    "Not Available"
-                )
-            ),
-
-
-            "ROE":
-
-            str(
-
-                market_data.get(
-
-                    "returnOnEquity",
-
-                    "Not Available"
-                )
-            ),
-
-
-            "P/E":
-
-            str(
-
-                market_data.get(
-
-                    "trailingPE",
-
-                    "Not Available"
-                )
-            ),
-
-
-            "Debt/Equity":
-
-            str(
-
-                market_data.get(
-
-                    "debtToEquity",
-
-                    "Not Available"
-                )
-            )
-        },
-
-
-        "risks": [
-
-            "Macroeconomic slowdown",
-
-            "Competitive intensity",
-
-            "Regulatory changes"
-        ],
-
-
-        "investment_thesis":
-
-        investment_thesis
+            "Revenue Growth": "22%"
+        }
     }

@@ -9,6 +9,5 @@ requests
 beautifulsoup4
 duckduckgo-search
 yfinance
-google-generativeai
 python-dotenv
 google-generativeai>=0.7.2
