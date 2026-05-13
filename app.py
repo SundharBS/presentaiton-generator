@@ -12,20 +12,26 @@ from auto_fetch import (
 # PAGE CONFIG
 
 st.set_page_config(
+
     page_title="AI Investment Deck Generator",
+
     layout="wide"
 )
 
 
-# CREATE FOLDERS
+# CREATE REQUIRED FOLDERS
 
 os.makedirs(
+
     "documents",
+
     exist_ok=True
 )
 
 os.makedirs(
+
     "output",
+
     exist_ok=True
 )
 
@@ -33,11 +39,13 @@ os.makedirs(
 # TITLE
 
 st.title(
+
     "AI Investment Deck Generator"
 )
 
 
 st.markdown(
+
     """
     Generate professional investment banking style
     pitch decks automatically using AI.
@@ -48,12 +56,15 @@ st.markdown(
 # INPUTS
 
 company_name = st.text_input(
+
     "Enter Company Name"
 )
 
 
 uploaded_file = st.file_uploader(
+
     "Upload Annual Report (Optional)",
+
     type=["pdf"]
 )
 
@@ -86,7 +97,7 @@ selected_sections = st.multiselect(
 )
 
 
-# BUTTON
+# GENERATE BUTTON
 
 if st.button(
 
@@ -98,7 +109,7 @@ if st.button(
         raw_text = ""
 
 
-        # USER PDF
+        # USER UPLOADED PDF
 
         if uploaded_file:
 
@@ -113,7 +124,7 @@ if st.button(
             )
 
 
-        # AUTO FETCH
+        # AUTO FETCH DOCUMENTS
 
         if len(raw_text) < 1000 and company_name:
 
@@ -130,6 +141,7 @@ if st.button(
             downloaded_files = download_company_documents(
 
                 company_name,
+
                 pdf_links
             )
 
@@ -141,6 +153,7 @@ if st.button(
                     with open(
 
                         file_path,
+
                         "rb"
                     ) as file:
 
@@ -153,25 +166,25 @@ if st.button(
                     pass
 
 
-        # FALLBACK
+        # FALLBACK TEXT
 
         if len(raw_text.strip()) < 500:
 
             raw_text = f"""
 
-            {company_name} is a company operating
-            in India with scalable operations,
-            business expansion potential,
-            and institutional growth strategy.
+            {company_name} is an Indian company
+            with scalable operations,
+            customer-focused growth strategy,
+            and institutional expansion potential.
 
-            The company focuses on long-term
-            growth, customer acquisition,
-            operational efficiency,
-            and market expansion.
+            The company focuses on operational efficiency,
+            technology adoption,
+            market expansion,
+            and long-term growth opportunities.
             """
 
 
-        # GENERATE
+        # GENERATE ANALYSIS + PPT
 
         with st.spinner(
 
@@ -330,13 +343,17 @@ if st.button(
             )
 
 
-        # DOWNLOAD PPT
+        # DOWNLOAD BUTTON
 
-        if os.path.exists(ppt_path):
+        if os.path.exists(
+
+            ppt_path
+        ):
 
             with open(
 
                 ppt_path,
+
                 "rb"
             ) as file:
 
