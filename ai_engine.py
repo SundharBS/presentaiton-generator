@@ -30,7 +30,7 @@ genai.configure(
 # USE GEMINI PRO (MOST STABLE)
 
 model = genai.GenerativeModel(
-    "gemini-pro"
+    "gemini-1.5-flash"
 )
 
 
