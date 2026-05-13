@@ -1,0 +1,16 @@
+streamlit
+pandas
+plotly
+kaleido
+python-pptx
+pdfplumber
+pytesseract
+pdf2image
+pillow
+requests
+beautifulsoup4
+googlesearch-python
+duckduckgo-search
+wikipedia
+yfinance
+google-generativeai
