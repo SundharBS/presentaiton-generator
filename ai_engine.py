@@ -14,7 +14,7 @@ genai.configure(
 
 model = genai.GenerativeModel(
 
-    "gemini-1.5-flash-latest"
+    "gemini-1.5-flash"
 )
 
 
