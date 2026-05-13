@@ -4,12 +4,7 @@ import requests
 from duckduckgo_search import DDGS
 
 
-# SEARCH PDF LINKS
-
-def find_company_documents(
-
-    company_name
-):
+def find_company_documents(company_name):
 
     queries = [
 
@@ -20,41 +15,39 @@ def find_company_documents(
         f"{company_name} credit rating pdf"
     ]
 
-
     pdf_links = []
 
+    try:
 
-    with DDGS() as ddgs:
+        with DDGS() as ddgs:
 
-        for query in queries:
+            for query in queries:
 
-            results = ddgs.text(
+                results = ddgs.text(
 
-                query,
+                    query,
 
-                max_results=5
-            )
-
-
-            for result in results:
-
-                url = result.get(
-
-                    "href",
-
-                    ""
+                    max_results=5
                 )
 
+                for result in results:
 
-                if ".pdf" in url:
+                    url = result.get(
 
-                    pdf_links.append(url)
+                        "href",
 
+                        ""
+                    )
+
+                    if ".pdf" in url.lower():
+
+                        pdf_links.append(url)
+
+    except:
+        pass
 
     return list(set(pdf_links))
 
-
-# DOWNLOAD DOCUMENTS
 
 def download_company_documents(
 
@@ -69,7 +62,6 @@ def download_company_documents(
         company_name
     )
 
-
     os.makedirs(
 
         company_folder,
@@ -77,9 +69,7 @@ def download_company_documents(
         exist_ok=True
     )
 
-
     downloaded_files = []
-
 
     for index, url in enumerate(pdf_links):
 
@@ -92,7 +82,6 @@ def download_company_documents(
                 timeout=20
             )
 
-
             file_path = os.path.join(
 
                 company_folder,
@@ -100,28 +89,13 @@ def download_company_documents(
                 f"document_{index+1}.pdf"
             )
 
+            with open(file_path, "wb") as file:
 
-            with open(
+                file.write(response.content)
 
-                file_path,
-
-                "wb"
-            ) as file:
-
-                file.write(
-
-                    response.content
-                )
-
-
-            downloaded_files.append(
-
-                file_path
-            )
+            downloaded_files.append(file_path)
 
         except:
-
             pass
-
 
     return downloaded_files
