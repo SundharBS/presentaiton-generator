@@ -1,8 +1,18 @@
 import json
 import re
 
-from ai_engine import generate_company_analysis
 from ppt_generator import generate_ppt
+
+# SAFE AI IMPORT
+try:
+
+    from ai_engine import generate_company_analysis
+
+    AI_AVAILABLE = True
+
+except Exception:
+
+    AI_AVAILABLE = False
 
 
 def local_analysis(raw_text):
@@ -89,32 +99,35 @@ def generate_pitch_deck(
     selected_sections=None
 ):
 
-    if use_ai:
+    analysis = None
 
-        prompt = f"""
-        You are an investment banking analyst.
-
-        Analyze the company and return ONLY valid JSON.
-
-        {{
-            "client_situational_analysis": "",
-            "market_industry_overview": "",
-            "strategic_options_thesis": "",
-            "valuation_analysis": "",
-            "key_considerations_risk_factors": "",
-            "appendices": ""
-        }}
-
-        Company Information:
-        {raw_text}
-        """
-
-        analysis_text = generate_company_analysis(
-            company_name,
-            prompt
-        )
+    # AI MODE
+    if use_ai and AI_AVAILABLE:
 
         try:
+
+            prompt = f"""
+            You are an investment banking analyst.
+
+            Analyze the company and return ONLY valid JSON.
+
+            {{
+                "client_situational_analysis": "",
+                "market_industry_overview": "",
+                "strategic_options_thesis": "",
+                "valuation_analysis": "",
+                "key_considerations_risk_factors": "",
+                "appendices": ""
+            }}
+
+            Company Information:
+            {raw_text}
+            """
+
+            analysis_text = generate_company_analysis(
+                company_name,
+                prompt
+            )
 
             cleaned = (
                 analysis_text
@@ -129,6 +142,7 @@ def generate_pitch_deck(
 
             analysis = local_analysis(raw_text)
 
+    # LOCAL FALLBACK
     else:
 
         analysis = local_analysis(raw_text)
