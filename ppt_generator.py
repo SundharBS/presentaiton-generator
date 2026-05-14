@@ -1,5 +1,4 @@
 from pptx import Presentation
-from pptx.util import Inches
 
 
 def generate_ppt(company_name, analysis):
@@ -8,55 +7,42 @@ def generate_ppt(company_name, analysis):
 
     # TITLE SLIDE
     slide_layout = prs.slide_layouts[0]
-    slide = prs.slides.add_slide(slide_layout)
+
+    slide = prs.slides.add_slide(
+        slide_layout
+    )
 
     title = slide.shapes.title
+
     subtitle = slide.placeholders[1]
 
     title.text = f"{company_name} Investment Deck"
+
     subtitle.text = "Generated using AI"
 
-    # OVERVIEW SLIDE
-    slide_layout = prs.slide_layouts[1]
-    slide = prs.slides.add_slide(slide_layout)
+    # CONTENT SLIDES
+    sections = [
+        ("Company Overview", analysis.get("overview", "")),
+        ("Business Model", analysis.get("business_model", "")),
+        ("Industry Overview", analysis.get("industry_overview", ""))
+    ]
 
-    title = slide.shapes.title
-    body = slide.placeholders[1]
+    for heading, content in sections:
 
-    title.text = "Company Overview"
+        slide_layout = prs.slide_layouts[1]
 
-    body.text = analysis.get(
-        "overview",
-        "No overview available"
-    )
+        slide = prs.slides.add_slide(
+            slide_layout
+        )
 
-    # BUSINESS MODEL SLIDE
-    slide = prs.slides.add_slide(slide_layout)
+        title = slide.shapes.title
 
-    title = slide.shapes.title
-    body = slide.placeholders[1]
+        body = slide.placeholders[1]
 
-    title.text = "Business Model"
+        title.text = heading
 
-    body.text = analysis.get(
-        "business_model",
-        "No business model available"
-    )
+        body.text = content
 
-    # INDUSTRY OVERVIEW SLIDE
-    slide = prs.slides.add_slide(slide_layout)
-
-    title = slide.shapes.title
-    body = slide.placeholders[1]
-
-    title.text = "Industry Overview"
-
-    body.text = analysis.get(
-        "industry_overview",
-        "No industry overview available"
-    )
-
-    # SAVE PPT
     ppt_path = f"{company_name}_Investment_Deck.pptx"
 
     prs.save(ppt_path)

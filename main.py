@@ -1,3 +1,5 @@
+import json
+
 from ai_engine import generate_company_analysis
 from ppt_generator import generate_ppt
 
@@ -5,19 +7,21 @@ from ppt_generator import generate_ppt
 def generate_pitch_deck(company_name, raw_text):
 
     prompt = f"""
-    Analyze the following company information and provide output in this exact JSON format:
+    Analyze the following company information and provide output ONLY in valid JSON format.
+
+    Required JSON structure:
 
     {{
-        "overview": "Company overview here",
-        "business_model": "Business model here",
-        "industry_overview": "Industry overview here",
-        "aum": "Not Available",
-        "branches": "Not Available",
-        "customers": "Not Available",
-        "credit_rating": "Not Available"
+        "overview": "",
+        "business_model": "",
+        "industry_overview": "",
+        "aum": "",
+        "branches": "",
+        "customers": "",
+        "credit_rating": ""
     }}
 
-    Company Data:
+    Company Information:
     {raw_text}
     """
 
@@ -27,9 +31,13 @@ def generate_pitch_deck(company_name, raw_text):
     )
 
     try:
-        import json
 
-        cleaned = analysis_text.replace("```json", "").replace("```", "").strip()
+        cleaned = (
+            analysis_text
+            .replace("```json", "")
+            .replace("```", "")
+            .strip()
+        )
 
         analysis = json.loads(cleaned)
 

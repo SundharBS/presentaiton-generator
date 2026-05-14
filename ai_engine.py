@@ -2,28 +2,25 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# LOAD ENV VARIABLES
+# LOAD ENV
 load_dotenv()
 
-# CONFIGURE GEMINI API
-api_key = os.getenv("GOOGLE_API_KEY")
-
-if not api_key:
-    raise ValueError("GOOGLE_API_KEY not found")
-
-genai.configure(api_key=api_key)
+# CONFIGURE API
+genai.configure(
+    api_key=os.getenv("GOOGLE_API_KEY")
+)
 
 # LOAD MODEL
 model = genai.GenerativeModel(
     "gemini-2.0-flash"
 )
 
-# GENERATE COMPANY ANALYSIS
+
 def generate_company_analysis(company_name, prompt):
 
     try:
 
-        full_prompt = f"""
+        final_prompt = f"""
         You are a professional investment banking analyst.
 
         Company Name:
@@ -32,23 +29,25 @@ def generate_company_analysis(company_name, prompt):
         Task:
         {prompt}
 
-        Generate:
-        - Company overview
-        - Business model
-        - Industry overview
-        - Key strengths
-        - Risks
-        - Financial insights if available
-
-        Keep output professional and concise.
+        Generate concise and professional output.
         """
 
         response = model.generate_content(
-            full_prompt
+            final_prompt
         )
 
         return response.text
 
     except Exception as e:
 
-        return f"LLM Error: {str(e)}"
+        return f"""
+        {{
+            "overview": "LLM Error",
+            "business_model": "{str(e)}",
+            "industry_overview": "Not Available",
+            "aum": "Not Available",
+            "branches": "Not Available",
+            "customers": "Not Available",
+            "credit_rating": "Not Available"
+        }}
+        """
