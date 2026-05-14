@@ -1,151 +1,64 @@
-import os
-
 from pptx import Presentation
+from pptx.util import Inches
 
 
-# REPLACE TEXT
+def generate_ppt(company_name, analysis):
 
-def replace_text(
+    prs = Presentation()
 
-    shape,
-    replacements
-):
+    # TITLE SLIDE
+    slide_layout = prs.slide_layouts[0]
+    slide = prs.slides.add_slide(slide_layout)
 
-    if not shape.has_text_frame:
-        return
+    title = slide.shapes.title
+    subtitle = slide.placeholders[1]
 
-    for paragraph in shape.text_frame.paragraphs:
+    title.text = f"{company_name} Investment Deck"
+    subtitle.text = "Generated using AI"
 
-        for run in paragraph.runs:
+    # OVERVIEW SLIDE
+    slide_layout = prs.slide_layouts[1]
+    slide = prs.slides.add_slide(slide_layout)
 
-            text = run.text
+    title = slide.shapes.title
+    body = slide.placeholders[1]
 
-            for key, value in replacements.items():
+    title.text = "Company Overview"
 
-                text = text.replace(
-
-                    key,
-
-                    str(value)
-                )
-
-            run.text = text
-
-
-# MAIN PPT FUNCTION
-
-def generate_ppt(
-
-    company_name,
-    analysis,
-    selected_sections
-):
-
-    prs = Presentation(
-
-        "template.pptx"
+    body.text = analysis.get(
+        "overview",
+        "No overview available"
     )
 
+    # BUSINESS MODEL SLIDE
+    slide = prs.slides.add_slide(slide_layout)
 
-    replacements = {
+    title = slide.shapes.title
+    body = slide.placeholders[1]
 
-        "UGRO Capital":
+    title.text = "Business Model"
 
-        company_name,
-
-
-        "₹12,003 Cr":
-
-        analysis.get(
-
-            "aum",
-
-            "Not Available"
-        ),
-
-
-        "2.3%":
-
-        analysis.get(
-
-            "financial_performance",
-
-            {}
-        ).get(
-
-            "ROE",
-
-            "Not Available"
-        ),
-
-
-        "33%":
-
-        analysis.get(
-
-            "financial_performance",
-
-            {}
-        ).get(
-
-            "Revenue Growth",
-
-            "Not Available"
-        ),
-
-
-        "India's Premier DataTech MSME Lender":
-
-        analysis.get(
-
-            "company_overview",
-
-            ""
-        ),
-
-
-        "MSME Accha Hai! — Expanding Horizons":
-
-        analysis.get(
-
-            "investment_thesis",
-
-            ""
-        )
-    }
-
-
-    for slide in prs.slides:
-
-        for shape in slide.shapes:
-
-            replace_text(
-
-                shape,
-                replacements
-            )
-
-
-    os.makedirs(
-
-        "output",
-
-        exist_ok=True
+    body.text = analysis.get(
+        "business_model",
+        "No business model available"
     )
 
+    # INDUSTRY OVERVIEW SLIDE
+    slide = prs.slides.add_slide(slide_layout)
 
-    output_path = os.path.join(
+    title = slide.shapes.title
+    body = slide.placeholders[1]
 
-        "output",
+    title.text = "Industry Overview"
 
-        f"{company_name}_Investment_Deck.pptx"
+    body.text = analysis.get(
+        "industry_overview",
+        "No industry overview available"
     )
 
+    # SAVE PPT
+    ppt_path = f"{company_name}_Investment_Deck.pptx"
 
-    prs.save(
+    prs.save(ppt_path)
 
-        output_path
-    )
-
-
-    return output_path
+    return ppt_path
