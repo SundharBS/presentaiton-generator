@@ -21,34 +21,7 @@ def local_analysis(raw_text):
 
                     extracted.append(line)
 
-        return "\n".join(extracted[:20])
-
-    overview = extract_section(
-        [
-            "overview",
-            "company",
-            "business",
-            "about"
-        ]
-    )
-
-    business_model = extract_section(
-        [
-            "products",
-            "services",
-            "revenue",
-            "customers"
-        ]
-    )
-
-    industry_overview = extract_section(
-        [
-            "industry",
-            "market",
-            "competition",
-            "growth"
-        ]
-    )
+        return "\n".join(extracted[:25])
 
     revenue_match = re.search(
         r"Revenue.*?(\d[\d,\.]+)",
@@ -56,45 +29,80 @@ def local_analysis(raw_text):
         re.IGNORECASE
     )
 
-    aum = (
+    revenue = (
         revenue_match.group(1)
         if revenue_match
         else "Not Available"
     )
 
     return {
-        "overview": overview or "Overview not found",
-        "business_model": business_model or "Business model not found",
-        "industry_overview": industry_overview or "Industry overview not found",
-        "aum": aum,
-        "branches": "Not Available",
-        "customers": "Not Available",
-        "credit_rating": "Not Available"
+
+        "client_situational_analysis": extract_section(
+            [
+                "overview",
+                "business",
+                "company",
+                "operations"
+            ]
+        ),
+
+        "market_industry_overview": extract_section(
+            [
+                "industry",
+                "market",
+                "competition",
+                "growth"
+            ]
+        ),
+
+        "strategic_options_thesis": extract_section(
+            [
+                "strategy",
+                "expansion",
+                "future",
+                "opportunity"
+            ]
+        ),
+
+        "valuation_analysis": f"""
+Estimated Revenue / Financial Indicator:
+{revenue}
+        """,
+
+        "key_considerations_risk_factors": extract_section(
+            [
+                "risk",
+                "challenge",
+                "regulation",
+                "debt"
+            ]
+        ),
+
+        "appendices": "Generated from uploaded report / fetched company information."
     }
 
 
 def generate_pitch_deck(
     company_name,
     raw_text,
-    use_ai=True
+    use_ai=True,
+    selected_sections=None
 ):
 
-    # AI MODE
     if use_ai:
 
         prompt = f"""
-        Analyze the following company information.
+        You are an investment banking analyst.
 
-        Return ONLY valid JSON.
+        Analyze the company and return ONLY valid JSON.
 
         {{
-            "overview": "",
-            "business_model": "",
-            "industry_overview": "",
-            "aum": "",
-            "branches": "",
-            "customers": "",
-            "credit_rating": ""
+            "client_situational_analysis": "",
+            "market_industry_overview": "",
+            "strategic_options_thesis": "",
+            "valuation_analysis": "",
+            "key_considerations_risk_factors": "",
+            "appendices": ""
         }}
 
         Company Information:
@@ -121,14 +129,14 @@ def generate_pitch_deck(
 
             analysis = local_analysis(raw_text)
 
-    # LOCAL MODE
     else:
 
         analysis = local_analysis(raw_text)
 
     ppt_path = generate_ppt(
         company_name,
-        analysis
+        analysis,
+        selected_sections
     )
 
     return {

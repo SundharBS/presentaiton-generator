@@ -10,18 +10,40 @@ st.set_page_config(
     layout="wide"
 )
 
+# TITLE
 st.title("AI Investment Deck Generator")
 
 st.markdown(
     """
-    • Upload annual reports for local PPT generation  
-    • Or enter company name for AI-powered analysis
+    Generate professional investment banking style PPTs
+
+    • Upload annual reports for local generation  
+    • Or use AI-powered company analysis
     """
 )
 
 # COMPANY NAME
 company_name = st.text_input(
     "Enter Company Name"
+)
+
+# SECTION SELECTION
+selected_sections = st.multiselect(
+    "Select Sections to Include",
+    [
+        "Client Situational Analysis",
+        "Market & Industry Overview",
+        "Strategic Options / Thesis",
+        "Valuation Analysis",
+        "Key Considerations & Risk Factors",
+        "Appendices"
+    ],
+    default=[
+        "Client Situational Analysis",
+        "Market & Industry Overview",
+        "Strategic Options / Thesis",
+        "Valuation Analysis"
+    ]
 )
 
 # PDF UPLOAD
@@ -37,6 +59,12 @@ if st.button("Generate Investment Deck"):
 
         st.error(
             "Please enter company name"
+        )
+
+    elif len(selected_sections) == 0:
+
+        st.error(
+            "Please select at least one section"
         )
 
     else:
@@ -62,10 +90,10 @@ if st.button("Generate Investment Deck"):
             use_ai = False
 
             st.success(
-                "Using local template generation"
+                "Using local report-based generation"
             )
 
-        # AI FETCH MODE
+        # AI MODE
         else:
 
             with st.spinner(
@@ -79,7 +107,7 @@ if st.button("Generate Investment Deck"):
             use_ai = True
 
             st.success(
-                "Using AI-powered generation"
+                "Using AI-powered company analysis"
             )
 
         # GENERATE DECK
@@ -90,47 +118,100 @@ if st.button("Generate Investment Deck"):
             result = generate_pitch_deck(
                 company_name,
                 raw_text,
-                use_ai
+                use_ai,
+                selected_sections
             )
 
         analysis = result["analysis"]
 
-        # DISPLAY
-        st.header("Company Overview")
+        # DISPLAY SECTIONS
 
-        st.write(
-            analysis.get(
-                "overview",
-                "Not Available"
+        if "Client Situational Analysis" in selected_sections:
+
+            st.header(
+                "Client Situational Analysis"
             )
-        )
 
-        st.header("Business Model")
-
-        st.write(
-            analysis.get(
-                "business_model",
-                "Not Available"
+            st.write(
+                analysis.get(
+                    "client_situational_analysis",
+                    "Not Available"
+                )
             )
-        )
 
-        st.header("Industry Overview")
+        if "Market & Industry Overview" in selected_sections:
 
-        st.write(
-            analysis.get(
-                "industry_overview",
-                "Not Available"
+            st.header(
+                "Market & Industry Overview"
             )
-        )
 
-        # DOWNLOAD
+            st.write(
+                analysis.get(
+                    "market_industry_overview",
+                    "Not Available"
+                )
+            )
+
+        if "Strategic Options / Thesis" in selected_sections:
+
+            st.header(
+                "Strategic Options / Thesis"
+            )
+
+            st.write(
+                analysis.get(
+                    "strategic_options_thesis",
+                    "Not Available"
+                )
+            )
+
+        if "Valuation Analysis" in selected_sections:
+
+            st.header(
+                "Valuation Analysis"
+            )
+
+            st.write(
+                analysis.get(
+                    "valuation_analysis",
+                    "Not Available"
+                )
+            )
+
+        if "Key Considerations & Risk Factors" in selected_sections:
+
+            st.header(
+                "Key Considerations & Risk Factors"
+            )
+
+            st.write(
+                analysis.get(
+                    "key_considerations_risk_factors",
+                    "Not Available"
+                )
+            )
+
+        if "Appendices" in selected_sections:
+
+            st.header(
+                "Appendices"
+            )
+
+            st.write(
+                analysis.get(
+                    "appendices",
+                    "Not Available"
+                )
+            )
+
+        # DOWNLOAD PPT
         with open(
             result["ppt_path"],
             "rb"
         ) as file:
 
             st.download_button(
-                label="Download PPT",
+                label="Download Investment Deck",
                 data=file,
                 file_name=f"{company_name}_Investment_Deck.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"

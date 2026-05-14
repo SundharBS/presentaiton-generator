@@ -2,13 +2,16 @@ import os
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# LOAD ENV
+# LOAD ENV VARIABLES
 load_dotenv()
 
-# CONFIGURE API
-genai.configure(
-    api_key=os.getenv("GOOGLE_API_KEY")
-)
+# CONFIGURE GEMINI API
+api_key = os.getenv("GOOGLE_API_KEY")
+
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found")
+
+genai.configure(api_key=api_key)
 
 # LOAD MODEL
 model = genai.GenerativeModel(
@@ -20,7 +23,7 @@ def generate_company_analysis(company_name, prompt):
 
     try:
 
-        final_prompt = f"""
+        full_prompt = f"""
         You are a professional investment banking analyst.
 
         Company Name:
@@ -29,11 +32,19 @@ def generate_company_analysis(company_name, prompt):
         Task:
         {prompt}
 
-        Generate concise and professional output.
+        Generate:
+        - Client Situational Analysis
+        - Market & Industry Overview
+        - Strategic Options / Thesis
+        - Valuation Analysis
+        - Key Considerations & Risk Factors
+        - Appendices
+
+        Keep output professional and concise.
         """
 
         response = model.generate_content(
-            final_prompt
+            full_prompt
         )
 
         return response.text
@@ -42,12 +53,11 @@ def generate_company_analysis(company_name, prompt):
 
         return f"""
         {{
-            "overview": "LLM Error",
-            "business_model": "{str(e)}",
-            "industry_overview": "Not Available",
-            "aum": "Not Available",
-            "branches": "Not Available",
-            "customers": "Not Available",
-            "credit_rating": "Not Available"
+            "client_situational_analysis": "LLM Error",
+            "market_industry_overview": "{str(e)}",
+            "strategic_options_thesis": "Not Available",
+            "valuation_analysis": "Not Available",
+            "key_considerations_risk_factors": "Not Available",
+            "appendices": "Not Available"
         }}
         """
