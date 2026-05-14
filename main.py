@@ -15,23 +15,48 @@ except Exception:
     AI_AVAILABLE = False
 
 
+def clean_text(text, max_lines=6):
+
+    if not text:
+        return "Not Available"
+
+    lines = []
+
+    for line in text.split("\n"):
+
+        line = line.strip()
+
+        if (
+            line
+            and len(line) > 20
+            and line not in lines
+        ):
+
+            lines.append(f"• {line}")
+
+    return "\n".join(lines[:max_lines])
+
+
+def extract_section(raw_text, keywords):
+
+    extracted = []
+
+    lines = raw_text.split("\n")
+
+    for line in lines:
+
+        for keyword in keywords:
+
+            if keyword.lower() in line.lower():
+
+                extracted.append(line)
+
+    return clean_text(
+        "\n".join(extracted)
+    )
+
+
 def local_analysis(raw_text):
-
-    def extract_section(keywords):
-
-        lines = raw_text.split("\n")
-
-        extracted = []
-
-        for line in lines:
-
-            for keyword in keywords:
-
-                if keyword.lower() in line.lower():
-
-                    extracted.append(line)
-
-        return "\n".join(extracted[:25])
 
     revenue_match = re.search(
         r"Revenue.*?(\d[\d,\.]+)",
@@ -47,7 +72,9 @@ def local_analysis(raw_text):
 
     return {
 
-        "client_situational_analysis": extract_section(
+        "client_situational_analysis":
+        extract_section(
+            raw_text,
             [
                 "overview",
                 "business",
@@ -56,7 +83,9 @@ def local_analysis(raw_text):
             ]
         ),
 
-        "market_industry_overview": extract_section(
+        "market_industry_overview":
+        extract_section(
+            raw_text,
             [
                 "industry",
                 "market",
@@ -65,7 +94,9 @@ def local_analysis(raw_text):
             ]
         ),
 
-        "strategic_options_thesis": extract_section(
+        "strategic_options_thesis":
+        extract_section(
+            raw_text,
             [
                 "strategy",
                 "expansion",
@@ -74,21 +105,37 @@ def local_analysis(raw_text):
             ]
         ),
 
-        "valuation_analysis": f"""
-Estimated Revenue / Financial Indicator:
+        "valuation_analysis":
+        f"""
+• Estimated Revenue / Financial Indicator:
 {revenue}
+
+• Financial performance extracted from uploaded report
+
+• Further valuation benchmarking recommended
         """,
 
-        "key_considerations_risk_factors": extract_section(
+        "key_considerations_risk_factors":
+        extract_section(
+            raw_text,
             [
                 "risk",
                 "challenge",
                 "regulation",
-                "debt"
+                "debt",
+                "default",
+                "compliance"
             ]
         ),
 
-        "appendices": "Generated from uploaded report / fetched company information."
+        # COVER PAGE METRICS
+        "aum": revenue,
+
+        "growth": "Strong Growth",
+
+        "gnpa": "Moderate Risk",
+
+        "capital": "Well Capitalized"
     }
 
 
@@ -111,13 +158,21 @@ def generate_pitch_deck(
 
             Analyze the company and return ONLY valid JSON.
 
+            Keep every section concise and presentation-friendly.
+
+            Return:
+
             {{
                 "client_situational_analysis": "",
                 "market_industry_overview": "",
                 "strategic_options_thesis": "",
                 "valuation_analysis": "",
                 "key_considerations_risk_factors": "",
-                "appendices": ""
+
+                "aum": "",
+                "growth": "",
+                "gnpa": "",
+                "capital": ""
             }}
 
             Company Information:
@@ -140,12 +195,15 @@ def generate_pitch_deck(
 
         except Exception:
 
-            analysis = local_analysis(raw_text)
+            analysis = local_analysis(
+                raw_text
+            )
 
-    # LOCAL FALLBACK
     else:
 
-        analysis = local_analysis(raw_text)
+        analysis = local_analysis(
+            raw_text
+        )
 
     ppt_path = generate_ppt(
         company_name,

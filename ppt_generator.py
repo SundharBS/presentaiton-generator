@@ -1,21 +1,31 @@
 from pptx import Presentation
 
 
-def add_slide(prs, title_text, body_text):
+def replace_placeholders(text, replacements):
 
-    slide_layout = prs.slide_layouts[1]
+    for key, value in replacements.items():
 
-    slide = prs.slides.add_slide(
-        slide_layout
-    )
+        text = text.replace(
+            key,
+            str(value)
+        )
 
-    title = slide.shapes.title
+    return text
 
-    body = slide.placeholders[1]
 
-    title.text = title_text
+def replace_in_shape(shape, replacements):
 
-    body.text = str(body_text)
+    if not shape.has_text_frame:
+        return
+
+    for paragraph in shape.text_frame.paragraphs:
+
+        for run in paragraph.runs:
+
+            run.text = replace_placeholders(
+                run.text,
+                replacements
+            )
 
 
 def generate_ppt(
@@ -24,86 +34,189 @@ def generate_ppt(
     selected_sections
 ):
 
-    prs = Presentation()
-
-    # TITLE SLIDE
-    slide_layout = prs.slide_layouts[0]
-
-    slide = prs.slides.add_slide(
-        slide_layout
+    prs = Presentation(
+        "template.pptx"
     )
 
-    title = slide.shapes.title
+    replacements = {
 
-    subtitle = slide.placeholders[1]
+        # COVER PAGE
+        "{{COMPANY_NAME}}":
+        company_name,
 
-    title.text = f"{company_name} Investment Deck"
+        "{{COMPANY_TAGLINE}}":
+        "AI Generated Investment Banking Deck",
 
-    subtitle.text = "Generated using AI"
+        "{{PRESENTATION_TITLE}}":
+        "Strategic Overview & Investment Thesis",
 
-    slides = [
-
-        (
-            "Client Situational Analysis",
-            analysis.get(
-                "client_situational_analysis",
-                "Not Available"
-            )
+        "{{STAT1_VALUE}}":
+        analysis.get(
+            "aum",
+            "N/A"
         ),
 
-        (
-            "Market & Industry Overview",
-            analysis.get(
-                "market_industry_overview",
-                "Not Available"
-            )
+        "{{STAT1_LABEL}}":
+        "Revenue / AUM",
+
+        "{{STAT2_VALUE}}":
+        analysis.get(
+            "growth",
+            "N/A"
         ),
 
-        (
-            "Strategic Options / Thesis",
-            analysis.get(
-                "strategic_options_thesis",
-                "Not Available"
-            )
+        "{{STAT2_LABEL}}":
+        "Growth",
+
+        "{{STAT3_VALUE}}":
+        analysis.get(
+            "gnpa",
+            "N/A"
         ),
 
-        (
-            "Valuation Analysis",
-            analysis.get(
-                "valuation_analysis",
-                "Not Available"
-            )
+        "{{STAT3_LABEL}}":
+        "Risk Indicator",
+
+        "{{STAT4_VALUE}}":
+        analysis.get(
+            "capital",
+            "N/A"
         ),
 
-        (
-            "Key Considerations & Risk Factors",
-            analysis.get(
-                "key_considerations_risk_factors",
-                "Not Available"
-            )
+        "{{STAT4_LABEL}}":
+        "Capital Base",
+
+        "{{IB_DIVISION_NAME}}":
+        "Investment Banking Division",
+
+        "{{PRESENTATION_DATE}}":
+        "May 2026",
+
+        # TOC
+        "{{CLIENT_SITUATIONAL_ANALYSIS}}":
+        "Client Situational Analysis",
+
+        "{{CLIENT_SITUATIONAL_ANALYSIS_SUBTITLE}}":
+        "Company Overview & Current Position",
+
+        "{{SWOT_ANALYSIS}}":
+        "SWOT Analysis",
+
+        "{{SWOT_ANALYSIS_SUBTITLE}}":
+        "Strengths, Weaknesses, Opportunities & Threats",
+
+        "{{FINANCIAL_PERFORMANCE_OVERVIEW}}":
+        "Financial Performance Overview",
+
+        "{{FINANCIAL_PERFORMANCE_OVERVIEW_SUBTITLE}}":
+        "Growth & Operating Metrics",
+
+        "{{COMPETITIVE_POSITION}}":
+        "Competitive Position",
+
+        "{{COMPETITIVE_POSITION_SUBTITLE}}":
+        "Positioning & Moat",
+
+        "{{MARKET_INDUSTRY_OVERVIEW}}":
+        "Market & Industry Overview",
+
+        "{{MARKET_INDUSTRY_OVERVIEW_SUBTITLE}}":
+        "Industry Landscape & Opportunity",
+
+        "{{KEY_CONSIDERATIONS_RISK_FACTORS}}":
+        "Key Considerations & Risk Factors",
+
+        "{{KEY_CONSIDERATIONS_RISK_FACTORS_SUBTITLE}}":
+        "Key Risks & Mitigants",
+
+        "{{STRATEGIC_OPTIONS_THESIS}}":
+        "Strategic Options / Thesis",
+
+        "{{STRATEGIC_OPTIONS_THESIS_SUBTITLE}}":
+        "Future Roadmap & Strategic Direction",
+
+        "{{VALUATION_ANALYSIS}}":
+        "Valuation Analysis",
+
+        "{{VALUATION_ANALYSIS_SUBTITLE}}":
+        "Peer Benchmarking & Investment View",
+
+        # SECTION HEADERS
+        "{{SECTION_01_HEADER}}":
+        "01 | CLIENT SITUATIONAL ANALYSIS",
+
+        "{{SECTION_01_TITLE}}":
+        analysis.get(
+            "client_situational_analysis",
+            "Not Available"
         ),
 
-        (
-            "Appendices",
-            analysis.get(
-                "appendices",
-                "Not Available"
+        "{{SECTION_02_HEADER}}":
+        "02 | SWOT ANALYSIS",
+
+        "{{SECTION_03_HEADER}}":
+        "03 | FINANCIAL PERFORMANCE",
+
+        "{{SECTION_04_HEADER}}":
+        "04 | COMPETITIVE POSITION",
+
+        "{{SECTION_05_HEADER}}":
+        "05 | MARKET OPPORTUNITY",
+
+        "{{SECTION_06_HEADER}}":
+        "06 | RISK FACTORS & MITIGANTS",
+
+        "{{SECTION_07_HEADER}}":
+        "07 | STRATEGIC OPTIONS / THESIS",
+
+        "{{SECTION_08_HEADER}}":
+        "08 | VALUATION ANALYSIS",
+
+        # CONTENT
+        "{{VALUATION_ANALYSIS}}":
+        analysis.get(
+            "valuation_analysis",
+            "Not Available"
+        ),
+
+        "{{KEY_CONSIDERATIONS_RISK_FACTORS}}":
+        analysis.get(
+            "key_considerations_risk_factors",
+            "Not Available"
+        ),
+
+        "{{MARKET_INDUSTRY_OVERVIEW}}":
+        analysis.get(
+            "market_industry_overview",
+            "Not Available"
+        ),
+
+        "{{STRATEGIC_OPTIONS_THESIS}}":
+        analysis.get(
+            "strategic_options_thesis",
+            "Not Available"
+        ),
+
+        "{{COMPANY_TAGLINE_CLOSING}}":
+        "Expanding Horizons",
+
+        "{{REPORT_YEAR}}":
+        "FY2025"
+    }
+
+    # REPLACE TEXT
+    for slide in prs.slides:
+
+        for shape in slide.shapes:
+
+            replace_in_shape(
+                shape,
+                replacements
             )
-        )
-    ]
 
-    for heading, content in slides:
-
-        if heading not in selected_sections:
-            continue
-
-        add_slide(
-            prs,
-            heading,
-            content
-        )
-
-    ppt_path = f"{company_name}_Investment_Deck.pptx"
+    ppt_path = (
+        f"{company_name}_Investment_Deck.pptx"
+    )
 
     prs.save(ppt_path)
 
