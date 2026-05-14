@@ -4,7 +4,6 @@ plotly
 kaleido
 python-pptx
 pdfplumber
-Pillow==10.4.0
 requests
 beautifulsoup4
 duckduckgo-search
