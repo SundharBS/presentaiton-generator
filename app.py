@@ -1,5 +1,7 @@
 import streamlit as st
 import pdfplumber
+
+from auto_fetch import fetch_company_data
 from main import generate_pitch_deck
 
 # PAGE CONFIG
@@ -11,7 +13,10 @@ st.set_page_config(
 st.title("AI Investment Deck Generator")
 
 st.markdown(
-    "Upload annual reports or company PDFs to generate investment decks"
+    """
+    • Upload annual reports for local PPT generation  
+    • Or enter company name for AI-powered analysis
+    """
 )
 
 # COMPANY NAME
@@ -21,7 +26,7 @@ company_name = st.text_input(
 
 # PDF UPLOAD
 uploaded_file = st.file_uploader(
-    "Upload Annual Report / Investor Presentation",
+    "Upload Annual Report (Optional)",
     type=["pdf"]
 )
 
@@ -30,104 +35,102 @@ if st.button("Generate Investment Deck"):
 
     if not company_name:
 
-        st.error("Please enter company name")
-
-    elif not uploaded_file:
-
-        st.error("Please upload a PDF")
+        st.error(
+            "Please enter company name"
+        )
 
     else:
 
-        with st.spinner("Extracting PDF text..."):
+        raw_text = ""
 
-            raw_text = ""
+        # PDF MODE
+        if uploaded_file:
 
-            with pdfplumber.open(uploaded_file) as pdf:
+            with st.spinner(
+                "Extracting PDF text..."
+            ):
 
-                for page in pdf.pages:
+                with pdfplumber.open(uploaded_file) as pdf:
 
-                    text = page.extract_text()
+                    for page in pdf.pages:
 
-                    if text:
-                        raw_text += text + "\n"
+                        text = page.extract_text()
 
-        st.success("PDF processed successfully")
+                        if text:
+                            raw_text += text + "\n"
 
-        with st.spinner("Generating investment deck..."):
+            use_ai = False
+
+            st.success(
+                "Using local template generation"
+            )
+
+        # AI FETCH MODE
+        else:
+
+            with st.spinner(
+                "Fetching company data..."
+            ):
+
+                raw_text = fetch_company_data(
+                    company_name
+                )
+
+            use_ai = True
+
+            st.success(
+                "Using AI-powered generation"
+            )
+
+        # GENERATE DECK
+        with st.spinner(
+            "Generating investment deck..."
+        ):
 
             result = generate_pitch_deck(
                 company_name,
-                raw_text
+                raw_text,
+                use_ai
             )
 
         analysis = result["analysis"]
 
-        # METRICS
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-
-            st.metric(
-                "AUM / Revenue",
-                analysis.get("aum", "Not Available")
-            )
-
-        with col2:
-
-            st.metric(
-                "Branches",
-                analysis.get("branches", "Not Available")
-            )
-
-        with col3:
-
-            st.metric(
-                "Customers",
-                analysis.get("customers", "Not Available")
-            )
-
-        with col4:
-
-            st.metric(
-                "Credit Rating",
-                analysis.get("credit_rating", "Not Available")
-            )
-
-        # OVERVIEW
+        # DISPLAY
         st.header("Company Overview")
 
         st.write(
             analysis.get(
                 "overview",
-                "No overview available"
+                "Not Available"
             )
         )
 
-        # BUSINESS MODEL
         st.header("Business Model")
 
         st.write(
             analysis.get(
                 "business_model",
-                "No business model available"
+                "Not Available"
             )
         )
 
-        # INDUSTRY OVERVIEW
         st.header("Industry Overview")
 
         st.write(
             analysis.get(
                 "industry_overview",
-                "No industry overview available"
+                "Not Available"
             )
         )
 
-        # DOWNLOAD PPT
-        with open(result["ppt_path"], "rb") as file:
+        # DOWNLOAD
+        with open(
+            result["ppt_path"],
+            "rb"
+        ) as file:
 
             st.download_button(
-                label="Download Investment Deck",
+                label="Download PPT",
                 data=file,
                 file_name=f"{company_name}_Investment_Deck.pptx",
                 mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
