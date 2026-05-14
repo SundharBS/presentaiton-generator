@@ -1,124 +1,38 @@
 import os
-import re
-
-import yfinance as yf
-import streamlit as st
-
-from dotenv import load_dotenv
 import google.generativeai as genai
+from dotenv import load_dotenv
 
-
+# LOAD ENV VARIABLES
 load_dotenv()
 
+# CONFIGURE GEMINI API
+api_key = os.getenv("GOOGLE_API_KEY")
 
-API_KEY = os.getenv("GEMINI_API_KEY")
+if not api_key:
+    raise ValueError("GOOGLE_API_KEY not found")
 
-if not API_KEY:
+genai.configure(api_key=api_key)
 
-    try:
-        API_KEY = st.secrets["GEMINI_API_KEY"]
-
-    except:
-        API_KEY = None
-
-
-genai.configure(
-    api_key=API_KEY
-)
-
-
-# USE GEMINI PRO (MOST STABLE)
-
+# LOAD MODEL
 model = genai.GenerativeModel(
     "gemini-1.5-flash"
 )
 
-
-def ask_llm(prompt):
+# GENERATE COMPANY ANALYSIS
+def generate_company_analysis(company_name, prompt):
 
     try:
+        full_prompt = f"""
+        Company Name: {company_name}
 
-        response = model.generate_content(
-            prompt
-        )
+        {prompt}
+
+        Give detailed and professional investment style output.
+        """
+
+        response = model.generate_content(full_prompt)
 
         return response.text
 
     except Exception as e:
-
-        return f"LLM Error: {e}"
-
-
-def extract_metric(text, patterns):
-
-    for pattern in patterns:
-
-        match = re.search(
-            pattern,
-            text,
-            re.IGNORECASE
-        )
-
-        if match:
-            return match.group(1)
-
-    return "Not Available"
-
-
-def generate_company_analysis(
-    company_name,
-    raw_text
-):
-
-    overview = ask_llm(
-
-        f"""
-        Create professional investment banking
-        company overview for {company_name}.
-
-        Data:
-        {raw_text[:12000]}
-        """
-    )
-
-    business_model = ask_llm(
-
-        f"""
-        Explain business model of {company_name}
-        professionally.
-        """
-    )
-
-    industry = ask_llm(
-
-        f"""
-        Explain industry overview and growth outlook
-        for {company_name}.
-        """
-    )
-
-    return {
-
-        "aum": "Not Available",
-
-        "branch_count": "Not Available",
-
-        "customer_count": "Not Available",
-
-        "credit_rating": "Not Available",
-
-        "company_overview": overview,
-
-        "business_model": business_model,
-
-        "industry_overview": industry,
-
-        "investment_thesis": "Strong scalable growth opportunity.",
-
-        "financial_performance": {
-
-            "ROE": "18%",
-
-            "Revenue Growth": "22%"
-        }
-    }
+        return f"LLM Error: {str(e)}"
