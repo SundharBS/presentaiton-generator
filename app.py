@@ -1,379 +1,176 @@
 import streamlit as st
-import os
-
 from main import generate_pitch_deck
-from pdf_reader import extract_pdf_text
-from auto_fetch import (
-    find_company_documents,
-    download_company_documents
-)
-
+from auto_fetch import fetch_company_data
 
 # PAGE CONFIG
-
 st.set_page_config(
-
     page_title="AI Investment Deck Generator",
-
     layout="wide"
 )
 
-
-# CREATE REQUIRED FOLDERS
-
-os.makedirs(
-
-    "documents",
-
-    exist_ok=True
-)
-
-os.makedirs(
-
-    "output",
-
-    exist_ok=True
-)
-
-
 # TITLE
-
-st.title(
-
-    "AI Investment Deck Generator"
-)
-
+st.title("AI Investment Deck Generator")
 
 st.markdown(
-
-    """
-    Generate professional investment banking style
-    pitch decks automatically using AI.
-    """
+    "Generate professional investment pitch decks using AI"
 )
 
-
 # INPUTS
-
 company_name = st.text_input(
-
     "Enter Company Name"
 )
 
-
-uploaded_file = st.file_uploader(
-
-    "Upload Annual Report (Optional)",
-
-    type=["pdf"]
-)
-
-
-# SECTIONS
-
 selected_sections = st.multiselect(
-
     "Select Sections",
-
     [
-
         "Overview",
-
         "Financials",
-
         "Operations",
-
-        "Advisory"
+        "Risks",
+        "Valuation"
     ],
-
     default=[
-
         "Overview",
-
         "Financials",
-
         "Operations"
     ]
 )
 
-
 # GENERATE BUTTON
+if st.button("Generate Investment Deck"):
 
-if st.button(
+    if not company_name:
 
-    "Generate Investment Deck"
-):
+        st.error(
+            "Please enter company name"
+        )
 
-    if company_name or uploaded_file:
+    else:
 
-        raw_text = ""
+        with st.spinner(
+            "Searching company documents..."
+        ):
 
-
-        # USER UPLOADED PDF
-
-        if uploaded_file:
-
-            st.info(
-
-                "Reading uploaded annual report..."
-            )
-
-            raw_text += extract_pdf_text(
-
-                uploaded_file
-            )
-
-
-        # AUTO FETCH DOCUMENTS
-
-        if len(raw_text) < 1000 and company_name:
-
-            st.info(
-
-                "Searching company documents..."
-            )
-
-            pdf_links = find_company_documents(
-
+            raw_text = fetch_company_data(
                 company_name
             )
 
-            downloaded_files = download_company_documents(
+        st.success(
+            "Investment deck generated successfully"
+        )
 
-                company_name,
-
-                pdf_links
-            )
-
-
-            for file_path in downloaded_files:
-
-                try:
-
-                    with open(
-
-                        file_path,
-
-                        "rb"
-                    ) as file:
-
-                        raw_text += extract_pdf_text(
-
-                            file
-                        )
-
-                except:
-                    pass
-
-
-        # FALLBACK TEXT
-
-        if len(raw_text.strip()) < 500:
-
-            raw_text = f"""
-
-            {company_name} is an Indian company
-            with scalable operations,
-            customer-focused growth strategy,
-            and institutional expansion potential.
-
-            The company focuses on operational efficiency,
-            technology adoption,
-            market expansion,
-            and long-term growth opportunities.
-            """
-
-
-        # GENERATE ANALYSIS + PPT
-
+        # GENERATE PITCH DECK
         with st.spinner(
-
             "Generating investment deck..."
         ):
 
             result = generate_pitch_deck(
-
                 company_name,
-
-                raw_text,
-
-                selected_sections
+                raw_text
             )
-
 
         analysis = result["analysis"]
 
-        ppt_path = result["ppt_path"]
-
-
-        st.success(
-
-            "Investment deck generated successfully"
-        )
-
-
         # METRICS
-
         col1, col2, col3, col4 = st.columns(4)
-
 
         with col1:
 
             st.metric(
-
                 "AUM / Market Cap",
-
                 analysis.get(
-
                     "aum",
-
                     "Not Available"
                 )
             )
-
 
         with col2:
 
             st.metric(
-
                 "Branches",
-
                 analysis.get(
-
-                    "branch_count",
-
+                    "branches",
                     "Not Available"
                 )
             )
-
 
         with col3:
 
             st.metric(
-
                 "Customers",
-
                 analysis.get(
-
-                    "customer_count",
-
+                    "customers",
                     "Not Available"
                 )
             )
-
 
         with col4:
 
             st.metric(
-
                 "Credit Rating",
-
                 analysis.get(
-
                     "credit_rating",
-
                     "Not Available"
                 )
             )
 
-
         # TABS
-
-        tab1, tab2, tab3 = st.tabs([
-
-            "Overview",
-
-            "Business Model",
-
-            "Industry Overview"
-        ])
-
+        tab1, tab2, tab3 = st.tabs(
+            [
+                "Overview",
+                "Business Model",
+                "Industry Overview"
+            ]
+        )
 
         with tab1:
 
-            st.subheader(
-
+            st.header(
                 "Company Overview"
             )
 
             st.write(
-
                 analysis.get(
-
-                    "company_overview",
-
-                    ""
+                    "overview",
+                    "No overview available"
                 )
             )
 
-
         with tab2:
 
-            st.subheader(
-
+            st.header(
                 "Business Model"
             )
 
             st.write(
-
                 analysis.get(
-
                     "business_model",
-
-                    ""
+                    "No business model available"
                 )
             )
 
-
         with tab3:
 
-            st.subheader(
-
+            st.header(
                 "Industry Overview"
             )
 
             st.write(
-
                 analysis.get(
-
                     "industry_overview",
-
-                    ""
+                    "No industry overview available"
                 )
             )
 
+        # DOWNLOAD PPT
+        with open(
+            result["ppt_path"],
+            "rb"
+        ) as file:
 
-        # DOWNLOAD BUTTON
-
-        if os.path.exists(
-
-            ppt_path
-        ):
-
-            with open(
-
-                ppt_path,
-
-                "rb"
-            ) as file:
-
-                st.download_button(
-
-                    label="Download Investment Deck",
-
-                    data=file,
-
-                    file_name=os.path.basename(
-
-                        ppt_path
-                    ),
-
-                    mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                )
-
-    else:
-
-        st.error(
-
-            "Please enter company name or upload annual report."
-        )
+            st.download_button(
+                label="Download Investment Deck",
+                data=file,
+                file_name=f"{company_name}_Investment_Deck.pptx",
+                mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            )
