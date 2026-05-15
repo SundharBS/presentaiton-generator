@@ -1,7 +1,10 @@
 from pptx import Presentation
 
 
-def replace_placeholders(text, replacements):
+def safe_replace(text, replacements):
+
+    if not text:
+        return text
 
     for key, value in replacements.items():
 
@@ -13,19 +16,27 @@ def replace_placeholders(text, replacements):
     return text
 
 
-def replace_in_shape(shape, replacements):
+def replace_text_in_shape(shape, replacements):
 
-    if not shape.has_text_frame:
+    if not hasattr(shape, "text_frame"):
         return
 
-    for paragraph in shape.text_frame.paragraphs:
+    text_frame = shape.text_frame
+
+    for paragraph in text_frame.paragraphs:
 
         for run in paragraph.runs:
 
-            run.text = replace_placeholders(
-                run.text,
+            original_text = run.text
+
+            updated_text = safe_replace(
+                original_text,
                 replacements
             )
+
+            if updated_text != original_text:
+
+                run.text = updated_text
 
 
 def generate_ppt(
@@ -34,6 +45,7 @@ def generate_ppt(
     selected_sections
 ):
 
+    # LOAD TEMPLATE
     prs = Presentation(
         "template.pptx"
     )
@@ -115,7 +127,7 @@ def generate_ppt(
         "Competitive Position",
 
         "{{COMPETITIVE_POSITION_SUBTITLE}}":
-        "Positioning & Moat",
+        "Positioning & Competitive Moat",
 
         "{{MARKET_INDUSTRY_OVERVIEW}}":
         "Market & Industry Overview",
@@ -141,7 +153,7 @@ def generate_ppt(
         "{{VALUATION_ANALYSIS_SUBTITLE}}":
         "Peer Benchmarking & Investment View",
 
-        # SECTION HEADERS
+        # SECTIONS
         "{{SECTION_01_HEADER}}":
         "01 | CLIENT SITUATIONAL ANALYSIS",
 
@@ -172,19 +184,7 @@ def generate_ppt(
         "{{SECTION_08_HEADER}}":
         "08 | VALUATION ANALYSIS",
 
-        # CONTENT
-        "{{VALUATION_ANALYSIS}}":
-        analysis.get(
-            "valuation_analysis",
-            "Not Available"
-        ),
-
-        "{{KEY_CONSIDERATIONS_RISK_FACTORS}}":
-        analysis.get(
-            "key_considerations_risk_factors",
-            "Not Available"
-        ),
-
+        # BODY CONTENT
         "{{MARKET_INDUSTRY_OVERVIEW}}":
         analysis.get(
             "market_industry_overview",
@@ -197,6 +197,18 @@ def generate_ppt(
             "Not Available"
         ),
 
+        "{{VALUATION_ANALYSIS}}":
+        analysis.get(
+            "valuation_analysis",
+            "Not Available"
+        ),
+
+        "{{KEY_CONSIDERATIONS_RISK_FACTORS}}":
+        analysis.get(
+            "key_considerations_risk_factors",
+            "Not Available"
+        ),
+
         "{{COMPANY_TAGLINE_CLOSING}}":
         "Expanding Horizons",
 
@@ -204,12 +216,12 @@ def generate_ppt(
         "FY2025"
     }
 
-    # REPLACE TEXT
+    # REPLACE TEXT WHILE PRESERVING FORMAT
     for slide in prs.slides:
 
         for shape in slide.shapes:
 
-            replace_in_shape(
+            replace_text_in_shape(
                 shape,
                 replacements
             )
